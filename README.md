@@ -1,138 +1,201 @@
 # Seq-FNO
 
-This repository contains the implementation of **Seq-FNO**, a sequence-to-sequence Fourier neural operator for learning long-term evolution laws from sparsely supervised trajectories. The code includes experiments for the Toda lattice, an exponential-interaction Toda system, and the Hénon–Heiles Hamiltonian system at four energy levels.
+This repository contains the implementation of **Seq-FNO**, a sequence-to-sequence Fourier neural operator for learning long-term evolution operators from sparsely supervised trajectories.
 
-## Repository structure
+The numerical examples include:
 
-| Directory | System | Main files |
-| --- | --- | --- |
-| `toda/` | Toda lattice | `data_ti.py`, `data_muti_time.py`, `Seq-FNO.py` |
-| `toda_exp/` | Exponential-interaction Toda system | `data_ti.py`, `data_muti_time.py`, `Seq-FNO.py` |
-| `H´enon-Heiles/H_1_20/` | Hénon–Heiles, \(H=1/20\) | `get_initial.py`, `get_data_ti.py`, `get_data_muti_time.py`, `Seq-FNO.py` |
-| `H´enon-Heiles/H_1_15/` | Hénon–Heiles, \(H=1/15\) | `get_initial.py`, `get_data_ti.py`, `get_data_muti_time.py`, `Seq-FNO.py` |
-| `H´enon-Heiles/H_1_10/` | Hénon–Heiles, \(H=1/10\) | `get_initial.py`, `get_data_ti.py`, `get_data_muti_time.py`, `Seq-FNO.py` |
-| `H´enon-Heiles/H_1_8/` | Hénon–Heiles, \(H=1/8\) | `get_initial.py`, `get_data_ti.py`, `get_data_muti_time.py`, `Seq-FNO.py` |
-
-`Adam.py` provides the optimizer implementation, `utilities3.py` contains data-loading and loss utilities, and `kg_equ.py`, `func_exp.py`, and `fun.py` define the corresponding dynamical systems.
+- Toda lattice;
+- exponential Toda lattice;
+- Hénon–Heiles system at \(H=1/20\), \(1/15\), \(1/10\), and \(1/8\).
 
 ## Requirements
 
-The code is written in Python and requires the following packages:
+Install the required packages:
 
 ```bash
 pip install numpy scipy matplotlib h5py torch
 ```
 
-The training and prediction scripts call `.cuda()` directly, so a CUDA-enabled PyTorch installation and an NVIDIA GPU are required unless the device handling in the scripts is changed.
+The current scripts use `.cuda()` directly. A CUDA-enabled PyTorch installation and an NVIDIA GPU are therefore required.
 
-## Data-generation workflow
+Clone the repository:
 
-Run each command from the corresponding experiment directory because the scripts use relative paths.
+```bash
+git clone https://github.com/stt-1030/Seq-FNO.git
+cd Seq-FNO
+```
 
-### Toda lattice
+Run each script from its corresponding experiment directory because relative paths are used throughout the code.
 
-The initial-condition file `state_u0_5000_new.mat` is included in `toda/`. Generate the sparse training pairs and the long-horizon reference trajectories before running Seq-FNO:
+## Repository Structure
+
+```text
+Seq-FNO/
+├── toda/
+├── toda_exp/
+└── H´enon-Heiles/
+    ├── H_1_20/
+    ├── H_1_15/
+    ├── H_1_10/
+    └── H_1_8/
+```
+
+In each experiment:
+
+- `data_ti.py` or `get_data_ti.py` generates sparse training data;
+- `data_muti_time.py` or `get_data_muti_time.py` generates long-horizon reference data;
+- `get_initial.py` generates Hénon–Heiles initial conditions;
+- `Seq-FNO.py` trains the model and evaluates long-horizon predictions.
+
+## Toda Lattice
+
+The initial-condition file `state_u0_5000_new.mat` is included in `toda/`.
+
+Run:
 
 ```bash
 cd toda
 python data_ti.py
-mkdir -p muti_time_1_N50
 python data_muti_time.py
 python Seq-FNO.py
 ```
 
-The scripts have the following roles:
+The scripts are executed in the following order:
 
-1. `data_ti.py` randomly selects one state from each trajectory and generates its next two states. It writes:
-   - `data_ti_N3.mat`: input states;
-   - `data_next_1_N3.mat`: first future states;
-   - `data_next_2_N3.mat`: second future states.
-2. `data_muti_time.py` generates the reference trajectories used for long-horizon prediction and error evaluation.
-3. `Seq-FNO.py` trains or loads Seq-FNO, produces future predictions, and evaluates the prediction errors.
+1. `data_ti.py` generates the randomly sampled input states and two supervised future states.
+2. `data_muti_time.py` generates the reference states from \(t=1\) to \(t=30\).
+3. `Seq-FNO.py` trains Seq-FNO and performs long-horizon prediction.
 
-> **Current-code note:** in `toda/Seq-FNO.py`, the training block and `torch.save(...)` line are commented out, and the script directly loads `results/FNO_N3_3/model/FNO_N3_3`. Uncomment the training block to train from scratch. The evaluation code also contains one reference to `muti_time_1_N3`; change it to `muti_time_1_N50` to match the output directory of `data_muti_time.py`.
+The generated reference data are saved in:
 
-### Exponential-interaction Toda system
+```text
+muti_time_1_N3/
+```
 
-The initial-condition file `state_u0_3000_lambdai_N3.mat` is included in `toda_exp/`. Run:
+The model, figures, and predictions are saved in:
+
+```text
+results/Seq-FNO/
+```
+
+## Exponential Toda Lattice
+
+The initial-condition file `state_u0_3000_lambdai_N3.mat` is included in `toda_exp/`.
+
+Run:
 
 ```bash
 cd toda_exp
 python data_ti.py
-mkdir -p muti_time_1_N50
 python data_muti_time.py
 python Seq-FNO.py
 ```
 
-Here, `data_ti.py` generates the sparse input and two supervised future states, while `data_muti_time.py` generates the long-horizon reference data. `Seq-FNO.py` then trains the model and evaluates the predicted trajectories.
+The generated reference data are saved in:
 
-> **Current-code note:** the evaluation code in `toda_exp/Seq-FNO.py` contains one reference to `muti_time_1_N3`; change it to `muti_time_1_N50` to match the generated reference-data directory.
+```text
+muti_time_1_N3/
+```
 
-### Hénon–Heiles system
+The model, figures, and predictions are saved in:
 
-For \(H=1/20\), \(1/15\), and \(1/10\), enter the selected energy directory and run:
+```text
+results/Seq-FNO/
+```
+
+## Hénon–Heiles System
+
+The Hénon–Heiles experiments are provided at four energy levels:
+
+| Directory | Energy |
+| --- | --- |
+| `H_1_20/` | \(H=1/20\) |
+| `H_1_15/` | \(H=1/15\) |
+| `H_1_10/` | \(H=1/10\) |
+| `H_1_8/` | \(H=1/8\) |
+
+To run an experiment, enter the corresponding directory. For example:
 
 ```bash
-cd "H´enon-Heiles/H_1_10"   # replace H_1_10 with H_1_20 or H_1_15 if needed
-mkdir -p 50_step_pred/muti_time
+cd "H´enon-Heiles/H_1_10"
 python get_initial.py
 python get_data_ti.py
 python get_data_muti_time.py
 python Seq-FNO.py
 ```
 
-For \(H=1/8\), the scripts use a different data-directory name:
+Replace `H_1_10` with `H_1_20`, `H_1_15`, or `H_1_8` to run another energy level.
 
-```bash
-cd "H´enon-Heiles/H_1_8"
-mkdir -p 50_step_pred_5000/muti_time 100_step_pred_5000/muti_time
-python get_initial.py
-python get_data_ti.py
-python get_data_muti_time.py
-python Seq-FNO.py
-```
-
-The Hénon–Heiles files are used in the following order:
+The scripts must be executed in this order:
 
 1. `get_initial.py` generates initial conditions on the prescribed energy surface.
-2. `get_data_ti.py` integrates the system, randomly selects a starting state from each trajectory, and saves two supervised future states.
-3. `get_data_muti_time.py` generates the full reference trajectories or processes them for long-horizon evaluation.
-4. `Seq-FNO.py` trains or loads the model and saves predictions under `results/FNO_3/pred/`.
+2. `get_data_ti.py` randomly selects a starting time for each trajectory and generates the supervised future states.
+3. `get_data_muti_time.py` generates the reference states from \(t=1\) to \(t=50\).
+4. `Seq-FNO.py` trains Seq-FNO and evaluates its long-horizon predictions.
 
-The principal MATLAB files are:
+The generated data are saved in:
 
-| File | MATLAB key | Description |
-| --- | --- | --- |
-| `IC.mat` or `IC_H_1_8.mat` | `ic` | Initial states \([q_1,q_2,p_1,p_2]\) |
-| `data_ti.mat` | `data` | Randomly selected input states |
-| `data_next_1.mat` | `data` | First supervised future states |
-| `data_next_2.mat` | `data` | Second supervised future states |
-| `groud_true.mat` | `true` | Full reference trajectories |
-| `muti_time/u_*.mat` | `u*` | Reference states at individual prediction times |
+```text
+50_step_pred/
+```
 
-> **Current-code notes**
->
-> - In `H_1_20/get_data_muti_time.py`, the loop that writes `muti_time/u_*.mat` is commented out. Uncomment it before long-horizon evaluation with `Seq-FNO.py`.
-> - In `H_1_20`, `H_1_15`, and `H_1_10`, the training block in `Seq-FNO.py` is commented out and the script directly loads `results/FNO_3/model/FNO_3`. Uncomment the training block and `torch.save(...)` to train from scratch.
-> - In `H_1_8/get_data_muti_time.py`, the trajectory-generation section is currently commented out. Enable that section to generate `groud_true.mat` and the time-indexed reference files before running a complete experiment from scratch.
-> - Check that the `50_step_pred_5000` and `100_step_pred_5000` references in the \(H=1/8\) scripts match the prediction horizon you intend to reproduce.
+The model, figures, prediction data, and error results are saved in:
 
-## Training configuration
+```text
+results/Seq-FNO_M{M}/
+```
 
-The main hyperparameters are defined directly in each `Seq-FNO.py` file:
+## Number of Supervised Steps
 
-- `ntrain` and `ntest`: numbers of training and test trajectories;
-- `batch_size`: mini-batch size;
-- `epochs`: number of training epochs;
-- `modes`: number of retained Fourier modes;
-- `width`: latent channel width;
-- `learning_rate`, `step_size`, and `gamma`: optimizer and learning-rate scheduler settings.
+For the Hénon–Heiles experiments, the number of supervised future steps is controlled by:
 
-Modify these values in the corresponding script before training if a different configuration is required.
+```python
+M = 2
+```
 
-## Reproducibility notes
+The supported values are:
 
-- NumPy, Python, and PyTorch random seeds are set in the scripts.
-- The provided code stores data and predictions in MATLAB `.mat` format.
-- Generated datasets and model checkpoints can be large and are therefore not all included in the repository.
-- Directory and file names such as `muti_time` and `groud_true.mat` are retained to match the paths used by the source code.
+```text
+M = 1, 2, 3, or 4
+```
+
+The value of `M` must be the same in:
+
+```text
+get_data_ti.py
+Seq-FNO.py
+```
+
+For example, to train with four supervised future states, set:
+
+```python
+M = 4
+```
+
+in both files, then run:
+
+```bash
+python get_data_ti.py
+python get_data_muti_time.py
+python Seq-FNO.py
+```
+
+`get_data_muti_time.py` only needs to be rerun when the initial conditions or reference trajectories are changed.
+
+## Output Files
+
+The main output directories are:
+
+```text
+model/    trained model
+plot/     prediction figures
+pred/     predicted trajectories
+```
+
+Prediction errors are saved as:
+
+```text
+pred_error_M{M}.mat
+```
+
+All generated datasets and predictions are stored in MATLAB `.mat` format.
