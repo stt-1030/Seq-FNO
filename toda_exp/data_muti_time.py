@@ -33,7 +33,7 @@ for i in range(sample):
         qp=sol['y'][:,index] #(6,21)
         output[j,i,:]=qp[:,j+1]
 for i in range(muti_time):
-    io.savemat('muti_time_1_N50/u_GRF_lambdai_{:.1f}.mat'.format(1*(i+1)),
+    io.savemat('muti_time_1_N3/u_GRF_lambdai_{:.1f}.mat'.format(1*(i+1)),
                         {'u{:.2f}'.format(1*(i+1)):output[i]})
 
 
