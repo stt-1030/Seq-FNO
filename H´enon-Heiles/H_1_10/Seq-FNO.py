@@ -18,16 +18,16 @@ np.random.seed(0)
 
 print(torch.__version__)
 
-if not os.path.exists('results/FNO_3/model/'):
-    os.makedirs('results/FNO_3/model/')
-if not os.path.exists('results/FNO_3/plot/'):
-    os.makedirs('results/FNO_3/plot/')
-if not os.path.exists('results/FNO_3/pred/'):
-    os.makedirs('results/FNO_3/pred/')
+if not os.path.exists('results/Seq-FNO/model/'):
+    os.makedirs('results/Seq-FNO/model/')
+if not os.path.exists('results/Seq-FNO/plot/'):
+    os.makedirs('results/Seq-FNO/plot/')
+if not os.path.exists('results/Seq-FNO/pred/'):
+    os.makedirs('results/Seq-FNO/pred/')
 
-path_model= 'results/FNO_3/model/'
-path_plot= 'results/FNO_3/plot/'
-path_pred= 'results/FNO_3/pred/'
+path_model= 'results/Seq-FNO/model/'
+path_plot= 'results/Seq-FNO/plot/'
+path_pred= 'results/Seq-FNO/pred/'
 ################################################################
 #  1d fourier layer
 ################################################################
@@ -259,9 +259,9 @@ myloss = LpLoss(size_average=False)
 #     t2 = default_timer()
 #     print("Epoch: %d, time: %.3f, Train l2:%.4f  Test l2: %.4f"
 #                   % ( ep, t2-t1, train_l2, test_l2) )
-# torch.save(model, path_model+'FNO_3')
+# torch.save(model, path_model+'Seq-FNO')
 
-model = torch.load(path_model+'FNO_3')
+model = torch.load(path_model+'Seq-FNO')
 pred = torch.zeros(ntest,4)
 index = 0
 test_e = torch.zeros(y_test.shape[0])
